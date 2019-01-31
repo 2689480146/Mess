@@ -31,10 +31,14 @@ class MessPlugin implements Plugin<Project> {
                             hasProcessResourcesExecuted = true
 
                             def rulesPath = "${project.buildDir.absolutePath}/intermediates/proguard-rules/${variant.dirName}/aapt_rules.txt"
+                            def rulesPathCopy = "${project.buildDir.absolutePath}/intermediates/proguard-rules/${variant.dirName}/aapt_rules_copy.txt"
                             File aaptRules = new File(rulesPath)
+                            File aaptRulesCopy = new File(rulesPathCopy)
+                            aaptRulesCopy.createNewFile()
+                            aaptRulesCopy << aaptRules.text
                             aaptRules.delete()
                             aaptRules.createNewFile()
-                            aaptRules << ""
+                            aaptRules << " "
                         }
 
                         proguardTask.doFirst {

@@ -54,11 +54,38 @@ class RewriteComponentTask extends DefaultTask {
         // the key2 will be mapped to, me.ele.aNew
         map = Util.sortMapping(map)
 
+        // parse aapt_rules
+        def rulesPathCopy = "${project.buildDir.absolutePath}/intermediates/proguard-rules/${apkVariant.dirName}/aapt_rules_copy.txt"
+        Map<String, Map<String, String>> replaceMap = Util.parseAaptRules(rulesPathCopy, map)
+
         // AndroidManifest.xml
-        map.each { k, v ->
-            String realPath = "${project.buildDir.absolutePath}/intermediates/manifests/full/${getSubResPath()}/AndroidManifest.xml"
-            writeLine(realPath, k, v)
+        if (replaceMap.containsKey("AndroidManifest.xml")) {
+            println "gradle version: " + project.getGradle().getGradleVersion()
+            int gradleVersion = Integer.parseInt(project.getGradle().getGradleVersion().split("\\.")[0])
+            String realPath = ""
+            if (gradleVersion <= 3) {
+                realPath = "${project.buildDir.absolutePath}/intermediates/manifests/full/${getSubResPath()}/AndroidManifest.xml"
+            } else {
+                String midPath = apkVariant.dirName.equals("debug") ? "processDebugManifest" : "processReleaseManifest"
+                realPath = "${project.buildDir.absolutePath}/intermediates/merged_manifests/${apkVariant.dirName}/${midPath}/merged/AndroidManifest.xml"
+            }
+            println "rewrite ${realPath}"
+            replaceMap.get("AndroidManifest.xml").each { k, v ->
+                println "replace ${k} -> ${v}"
+                writeLine(realPath, k, v)
+            }
+            println ''
         }
+
+
+//        replaceMap.each { k, v ->
+//            println "rewrite key = " + k
+//            ((Map) v).each { k2, v2 ->
+//                println "rewrite key2 = " + k2
+//                println "rewrite value2 = " + v2
+//            }
+//        }
+
 
         long t0 = System.currentTimeMillis()
         File resDir = new File(getResPath())
@@ -68,14 +95,23 @@ class RewriteComponentTask extends DefaultTask {
             }
             if (dir.exists() && dir.isDirectory() && isLayoutsDir(dir.name)) {
                 dir.eachFileRecurse(FileType.FILES) { File file ->
-                    String orgTxt = file.getText(CHARSET)
-                    String newTxt = orgTxt
-                    map.each { k, v ->
-                        newTxt = newTxt.replace(k, v)
-                    }
-                    if (newTxt != orgTxt) {
+                    String[] paths = file.absolutePath.split('/')
+                    int len = paths.length
+                    String key = paths[len - 2] + "/" + paths[len - 1]
+                    if (replaceMap.containsKey(key)) {
+                        String orgTxt = file.getText(CHARSET)
+                        String newTxt = orgTxt
+                        Map<String, String> mp = replaceMap.get(key)
                         println 'rewrite file: ' + file.absolutePath
-                        file.setText(newTxt, CHARSET)
+                        mp.each { k, v ->
+                            newTxt = newTxt.replace(k, v)
+                            println "replace ${k} -> ${v}"
+                        }
+                        if (newTxt != orgTxt) {
+//                            println 'rewrite file: ' + file.absolutePath
+                            file.setText(newTxt, CHARSET)
+                        }
+                        println ""
                     }
                 }
             }
@@ -113,7 +149,7 @@ class RewriteComponentTask extends DefaultTask {
                 line = URLEncoder.encode(line, CHARSET)
                 line = URLDecoder.decode(line.replaceAll(oldStr, newStr), CHARSET)
             }
-            builder.append(line);
+            builder.append(line)
             builder.append("\n")
         }
 
