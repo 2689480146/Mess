@@ -89,9 +89,42 @@ class RewriteComponentTask extends DefaultTask {
 
         long t0 = System.currentTimeMillis()
         File resDir = new File(getResPath())
-        resDir.eachFile { File dir ->
-            if (dir.isFile() && dir.name.endsWith(".flat")) {
-                throw new Exception("please disable AAPT2 by setting `android.enableAapt2=false` in your gradle.properties file.")
+        for (File dir : resDir.listFiles()) {
+            if (dir.isFile() && dir.name.endsWith(".xml.flat")) {
+                List<String> xmlPath = Util.parseAaptRulesGetXml(rulesPathCopy)
+                String resPath = getResPath()
+                for (String path : xmlPath) {
+                    String[] keyStrs = path.split("/")
+                    int len = keyStrs.length
+                    if (len >= 2) {
+                        String key = keyStrs[len - 2] + "/" + keyStrs[len - 1]
+                        if (replaceMap.containsKey(key)) {
+                            File file = new File(path)
+                            String orgTxt = file.getText(CHARSET)
+                            String newTxt = orgTxt
+                            Map<String, String> mp = replaceMap.get(key)
+                            println 'rewrite file: ' + file.absolutePath
+                            mp.each { k, v ->
+                                newTxt = newTxt.replace(k, v)
+                                println "replace ${k} -> ${v}"
+                            }
+                            if (newTxt != orgTxt) {
+                                file.setText(newTxt, CHARSET)
+                                // aapt compile
+                                def sout = new StringBuilder(), serr = new StringBuilder()
+                                def proc = "${project.rootDir}/aapt2 compile -o ${resPath} ${path}".execute()
+                                proc.consumeProcessOutput(sout, serr)
+                                proc.waitForOrKill(1000)
+                                println "rewrite out> $sout err> $serr"
+
+                                // recover xml file
+                                file.setText(orgTxt, CHARSET)
+                            }
+                            println ""
+                        }
+                    }
+                }
+                break
             }
             if (dir.exists() && dir.isDirectory() && isLayoutsDir(dir.name)) {
                 dir.eachFileRecurse(FileType.FILES) { File file ->

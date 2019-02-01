@@ -89,6 +89,9 @@ public class Util {
      * # view res/layout/abc_alert_dialog_title_material.xml #generated:56
      * -keep class android.support.v4.widget.Space { <init>(...); }
      *
+     * # Referenced at /Users/xxx/MyProject/app-project/app/src/main/res/layout/activity_filter_rec_detail.xml:69
+     * # Referenced at /Users/xxx/MyProject/app-project/app/src/main/res/layout/activity_color_filter_rec_detail.xml:67
+     * -keep class cn.xxx.PhotoFilterViewIndicator { <init>(...); }
      * @param rulesPath
      * @return
      */
@@ -103,6 +106,18 @@ public class Util {
                   tmpXmlPath.add("AndroidManifest.xml")
               } else {
                   String[] pathStr = line.split(' ')[0].split('/')
+                  int len = pathStr.length
+                  if (len >= 2) {
+                      String keyPath = pathStr[len - 2] + "/" + pathStr[len - 1]
+                      tmpXmlPath.add(keyPath)
+                  }
+              }
+          } else if (line.startsWith("# Referenced ")) { // aapt2
+              line = line.replace("# Referenced at ", '')
+              if (line.contains("AndroidManifest.xml")) {
+                  tmpXmlPath.add("AndroidManifest.xml")
+              } else {
+                  String[] pathStr = line.split(":")[0].split('/')
                   int len = pathStr.length
                   if (len >= 2) {
                       String keyPath = pathStr[len - 2] + "/" + pathStr[len - 1]
@@ -138,4 +153,24 @@ public class Util {
       }
       return resultMap
   }
+    /**
+     * # Referenced at /Users/xxx/MyProject/app-project/app/src/main/res/layout/activity_filter_rec_detail.xml:69
+     * # Referenced at /Users/xx/MyProject/app-project/app/src/main/res/layout/activity_color_filter_rec_detail.xml:67
+     * -keep class cn.xxx.PhotoFilterViewIndicator { <init>(...); }* @param rulesPath
+     * @return
+     */
+    public static List<String> parseAaptRulesGetXml(String rulesPath) {
+        File aaptRules = new File(rulesPath)
+        List<String> tmpXmlPath = new LinkedList<String>()
+        for (String line : aaptRules.readLines()) {
+            if (line.startsWith("# Referenced ") && !line.contains("AndroidManifest.xml")) {
+                // aapt2
+                String pathStr = line.replace("# Referenced at ", "").split(":")[0]
+                if (pathStr != null && !pathStr.equals("") && !tmpXmlPath.contains(pathStr)) {
+                    tmpXmlPath.add(pathStr)
+                }
+            }
+        }
+        return tmpXmlPath
+    }
 }
