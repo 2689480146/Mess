@@ -112,7 +112,9 @@ class RewriteComponentTask extends DefaultTask {
                             Map<String, String> mp = replaceMap.get(key)
                             println 'rewrite file: ' + file.absolutePath
                             mp.each { k, v ->
-                                newTxt = newTxt.replace(k, v)
+                                newTxt = newTxt.replace(k+"\n", v+"\n")
+                                newTxt = newTxt.replace(k+" ", v+" ")
+                                newTxt = newTxt.replace(k+">", v+">")
                                 println "replace ${k} -> ${v}"
                             }
                             if (newTxt != orgTxt) {
@@ -144,7 +146,9 @@ class RewriteComponentTask extends DefaultTask {
                         Map<String, String> mp = replaceMap.get(key)
                         println 'rewrite file: ' + file.absolutePath
                         mp.each { k, v ->
-                            newTxt = newTxt.replace(k, v)
+                            newTxt = newTxt.replace(k+"\n", v+"\n")
+                            newTxt = newTxt.replace(k+" ", v+" ")
+                            newTxt = newTxt.replace(k+">", v+">")
                             println "replace ${k} -> ${v}"
                         }
                         if (newTxt != orgTxt) {
