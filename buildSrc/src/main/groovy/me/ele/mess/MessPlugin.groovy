@@ -25,6 +25,9 @@ class MessPlugin implements Plugin<Project> {
                             return
                         }
 
+                        def shrinkResForTask = project.tasks.findByName("transformClassesWithShrinkResFor${variant.name.capitalize()}")
+                        boolean hasProguardExecuted = false
+
                         boolean hasProcessResourcesExecuted = false
                         output.processResources.doLast {
                             if (hasProcessResourcesExecuted) {
@@ -69,6 +72,7 @@ class MessPlugin implements Plugin<Project> {
                         }
 
                         proguardTask.doLast {
+                            hasProguardExecuted = true
                             println "proguard finish, ready to execute rewrite"
                             RewriteComponentTask rewriteTask = project.tasks.create(name: "rewriteComponentFor${variant.name.capitalize()}",
                                     type: RewriteComponentTask
@@ -84,6 +88,23 @@ class MessPlugin implements Plugin<Project> {
                                 Util.recoverProguardTxt(project, component)
                             }
                         }
+
+                        if (shrinkResForTask) {
+                            shrinkResForTask.doFirst {
+                                if (hasProguardExecuted) {
+                                    return
+                                }
+                                println "shrinkResForTask start, ready to execute rewrite"
+                                RewriteComponentTask rewriteTask = project.tasks.create(name: "rewriteComponentFor${variant.name.capitalize()}",
+                                        type: RewriteComponentTask
+                                ) {
+                                    applicationVariant = variant
+                                    variantOutput = output
+                                }
+                                rewriteTask.execute()
+                            }
+                        }
+
                     }
                 }
             }
