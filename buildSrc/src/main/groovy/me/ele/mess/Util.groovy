@@ -178,6 +178,9 @@ public class Util {
         println "MessTag whiteListPath = " + whiteListPath
         File whiteListFile = new File(whiteListPath)
         List<String> whiteList = new LinkedList<String>()
+        if (!whiteListFile.exists()) {
+            return whiteList
+        }
         for (String line : whiteListFile.readLines()) {
             if (line != null && line.length() != 0 && !whiteList.contains(line)) {
                 println "MessTag whiteList add " + line
