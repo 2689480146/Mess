@@ -1,7 +1,9 @@
 package me.ele.mess
 
 import com.android.build.gradle.api.ApkVariant
+import com.android.build.gradle.api.ApplicationVariant
 import com.android.build.gradle.api.BaseVariantOutput
+import com.android.sdklib.build.ApkBuilder
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 
@@ -13,7 +15,7 @@ class MessPlugin implements Plugin<Project> {
 
         project.afterEvaluate {
             project.plugins.withId('com.android.application') {
-                project.android.applicationVariants.all { ApkVariant variant ->
+                project.android.applicationVariants.all { ApplicationVariant variant ->
 
                     variant.outputs.each { BaseVariantOutput output ->
 
@@ -53,7 +55,7 @@ class MessPlugin implements Plugin<Project> {
                             RewriteComponentTask rewriteTask = project.tasks.create(name: "rewriteComponentFor${variant.name.capitalize()}",
                                     type: RewriteComponentTask
                             ) {
-                                apkVariant = variant
+                                applicationVariant = variant
                                 variantOutput = output
                             }
                             rewriteTask.execute()

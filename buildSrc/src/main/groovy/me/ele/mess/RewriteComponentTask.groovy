@@ -1,8 +1,12 @@
 package me.ele.mess
 
+import com.android.build.gradle.AppExtension
 import com.android.build.gradle.api.ApkVariant
+import com.android.build.gradle.api.ApplicationVariant
 import com.android.build.gradle.api.BaseVariantOutput
 import com.android.build.gradle.tasks.ProcessAndroidResources
+import com.android.builder.core.AndroidBuilder
+import com.android.sdklib.BuildToolInfo
 import groovy.io.FileType
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.Input
@@ -18,7 +22,7 @@ class RewriteComponentTask extends DefaultTask {
     static final String CHARSET = StandardCharsets.UTF_8.name()
 
     @Input
-    ApkVariant apkVariant
+    ApplicationVariant applicationVariant
 
     @Input
     BaseVariantOutput variantOutput
@@ -28,7 +32,7 @@ class RewriteComponentTask extends DefaultTask {
         println "start rewrite task"
 
         Map<String, String> map = new LinkedHashMap<>();
-        MappingReader reader = new MappingReader(apkVariant.mappingFile)
+        MappingReader reader = new MappingReader(applicationVariant.mappingFile)
         reader.pump(new MappingProcessor() {
             @Override
             boolean processClassMapping(String className, String newClassName) {
@@ -55,7 +59,7 @@ class RewriteComponentTask extends DefaultTask {
         map = Util.sortMapping(map)
 
         // parse aapt_rules
-        def rulesPathCopy = "${project.buildDir.absolutePath}/intermediates/proguard-rules/${apkVariant.dirName}/aapt_rules_copy.txt"
+        def rulesPathCopy = "${project.buildDir.absolutePath}/intermediates/proguard-rules/${applicationVariant.dirName}/aapt_rules_copy.txt"
         Map<String, Map<String, String>> replaceMap = Util.parseAaptRules(rulesPathCopy, map)
 
         // AndroidManifest.xml
@@ -66,8 +70,8 @@ class RewriteComponentTask extends DefaultTask {
             if (gradleVersion <= 3) {
                 realPath = "${project.buildDir.absolutePath}/intermediates/manifests/full/${getSubResPath()}/AndroidManifest.xml"
             } else {
-                String midPath = apkVariant.dirName.equals("debug") ? "processDebugManifest" : "processReleaseManifest"
-                realPath = "${project.buildDir.absolutePath}/intermediates/merged_manifests/${apkVariant.dirName}/${midPath}/merged/AndroidManifest.xml"
+                String midPath = applicationVariant.dirName.equals("debug") ? "processDebugManifest" : "processReleaseManifest"
+                realPath = "${project.buildDir.absolutePath}/intermediates/merged_manifests/${applicationVariant.dirName}/${midPath}/merged/AndroidManifest.xml"
             }
             println "rewrite ${realPath}"
             replaceMap.get("AndroidManifest.xml").each { k, v ->
@@ -93,6 +97,9 @@ class RewriteComponentTask extends DefaultTask {
             if (dir.isFile() && dir.name.endsWith(".xml.flat")) {
                 List<String> xmlPath = Util.parseAaptRulesGetXml(rulesPathCopy)
                 String resPath = getResPath()
+                BuildToolInfo buildToolInfo = applicationVariant.androidBuilder.getTargetInfo().getBuildTools()
+                String aapt2Path = buildToolInfo.getPath(BuildToolInfo.PathId.AAPT2)
+                println "####### aapt2Path path = " + aapt2Path + " ###########"
                 for (String path : xmlPath) {
                     String[] keyStrs = path.split("/")
                     int len = keyStrs.length
@@ -112,7 +119,7 @@ class RewriteComponentTask extends DefaultTask {
                                 file.setText(newTxt, CHARSET)
                                 // aapt compile
                                 def sout = new StringBuilder(), serr = new StringBuilder()
-                                def proc = "${project.rootDir}/aapt2 compile -o ${resPath} ${path}".execute()
+                                def proc = "${aapt2Path} compile -o ${resPath} ${path}".execute()
                                 proc.consumeProcessOutput(sout, serr)
                                 proc.waitForOrKill(1000)
                                 println "rewrite out> $sout err> $serr"
@@ -220,6 +227,6 @@ class RewriteComponentTask extends DefaultTask {
     }
 
     String getSubResPath() {
-        return apkVariant.getDirName();
+        return applicationVariant.getDirName()
     }
 }
