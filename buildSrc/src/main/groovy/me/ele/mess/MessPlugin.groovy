@@ -36,11 +36,29 @@ class MessPlugin implements Plugin<Project> {
                             def rulesPathCopy = "${project.buildDir.absolutePath}/intermediates/proguard-rules/${variant.dirName}/aapt_rules_copy.txt"
                             File aaptRules = new File(rulesPath)
                             File aaptRulesCopy = new File(rulesPathCopy)
-                            aaptRulesCopy.createNewFile()
-                            aaptRulesCopy << aaptRules.text
-                            aaptRules.delete()
+                            aaptRules.renameTo(aaptRulesCopy)
                             aaptRules.createNewFile()
-                            aaptRules << " "
+                            aaptRules << "\n"
+                            println "MessTag new file text = " + aaptRules.text
+
+                            // adjust aaptRules
+                            List<String> whiteList = Util.parseWhiteList("${project.rootDir}/activityProguard/whiteList")
+
+                            for (String line : aaptRulesCopy.readLines()) {
+//                                println "MessTag: line: " + line
+                                if (line.startsWith("-keep")) {
+                                    // -keep class ; len = 12
+                                    String tmpLine = line.substring(12, line.length())
+                                    for (String white : whiteList) {
+                                        if (tmpLine.startsWith(white)) {
+                                            println "MessTag: add keep class " + line
+                                            aaptRules.append(line + "\n")
+                                            break
+                                        }
+                                    }
+                                }
+                            }
+                            println "MessTag aaptRules text = " + aaptRules.text
                         }
 
                         proguardTask.doFirst {

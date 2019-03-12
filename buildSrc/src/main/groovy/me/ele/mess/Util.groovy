@@ -173,4 +173,17 @@ public class Util {
         }
         return tmpXmlPath
     }
+
+    public static List<String> parseWhiteList(String whiteListPath) {
+        println "MessTag whiteListPath = " + whiteListPath
+        File whiteListFile = new File(whiteListPath)
+        List<String> whiteList = new LinkedList<String>()
+        for (String line : whiteListFile.readLines()) {
+            if (line != null && line.length() != 0 && !whiteList.contains(line)) {
+                println "MessTag whiteList add " + line
+                whiteList.add(line)
+            }
+        }
+        return whiteList
+    }
 }
