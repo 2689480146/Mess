@@ -24,6 +24,7 @@ class MessPlugin implements Plugin<Project> {
                         if (!proguardTask) {
                             return
                         }
+                        proguardTask.outputs.upToDateWhen {false}
 
                         def shrinkResForTask = project.tasks.findByName("transformClassesWithShrinkResFor${variant.name.capitalize()}")
                         boolean hasProguardExecuted = false
