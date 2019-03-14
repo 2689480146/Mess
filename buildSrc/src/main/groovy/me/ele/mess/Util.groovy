@@ -7,6 +7,9 @@ import org.gradle.api.Project
 
 public class Util {
 
+  static final String TAG = "Util"
+  static final String LOG_FINE_NAME = "messProguard.txt"
+  static String LOG_PATH = "./" + LOG_FINE_NAME
   public static MavenCoordinates parseMavenString(String component) {
     String[] arrays = component.split(":")
     return new MavenCoordinates() {
@@ -59,7 +62,7 @@ public class Util {
     bundleDir.eachFileRecurse(FileType.FILES) { File f ->
       if (f.name == orgName) {
         File targetFile = new File(f.parentFile.absolutePath, newName)
-        println "rename file ${f.absolutePath} to ${targetFile.absolutePath}"
+        log TAG, "rename file ${f.absolutePath} to ${targetFile.absolutePath}"
         Files.move(f, targetFile)
       }
     }
@@ -130,12 +133,12 @@ public class Util {
 
               if (strings.length > 1) {
                   String className = strings[0]
-//                  println "rewrite className = " + className
+//                  log TAG, "rewrite className = " + className
                   if (className == null || className.isEmpty()) {
                       continue
                   }
                   String value = mappingMap.get(className)
-//                  println "rewrite mappingValue = " + value
+//                  log TAG, "rewrite mappingValue = " + value
                   if (value != null && !value.isEmpty() && !className.equals(value)) {
                       for (String path : tmpXmlPath) {
                           if (resultMap.containsKey(path)) {
@@ -175,7 +178,7 @@ public class Util {
     }
 
     public static List<String> parseWhiteList(String whiteListPath) {
-        println "MessTag whiteListPath = " + whiteListPath
+        log TAG, "whiteListPath = " + whiteListPath
         File whiteListFile = new File(whiteListPath)
         List<String> whiteList = new LinkedList<String>()
         if (!whiteListFile.exists()) {
@@ -183,10 +186,28 @@ public class Util {
         }
         for (String line : whiteListFile.readLines()) {
             if (line != null && line.length() != 0 && !whiteList.contains(line)) {
-                println "MessTag whiteList add " + line
+                log TAG, "whiteList add " + line
                 whiteList.add(line)
             }
         }
+        Util.log TAG, ""
         return whiteList
     }
+
+    public static void log(String tag, String msg, boolean needWrite) {
+        String logMsg = String.format("[MessProguard] %s: %s", tag, msg)
+        println logMsg
+        if (needWrite) {
+            File logFile = new File(LOG_PATH)
+            if (!logFile.exists()) {
+                logFile.createNewFile()
+            }
+            logFile.append(logMsg + "\n")
+        }
+    }
+
+    public static void log(String tag, String msg) {
+        log(tag, msg, true)
+    }
+
 }

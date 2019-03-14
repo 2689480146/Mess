@@ -20,6 +20,7 @@ import java.nio.charset.StandardCharsets
 class RewriteComponentTask extends DefaultTask {
 
     static final String CHARSET = StandardCharsets.UTF_8.name()
+    static final String TAG = "RewriteComponentTask"
 
     @Input
     ApplicationVariant applicationVariant
@@ -29,7 +30,7 @@ class RewriteComponentTask extends DefaultTask {
 
     @TaskAction
     void rewrite() {
-        println "start rewrite task"
+        Util.log TAG, "start rewrite task"
 
         Map<String, String> map = new LinkedHashMap<>();
         MappingReader reader = new MappingReader(applicationVariant.mappingFile)
@@ -62,9 +63,10 @@ class RewriteComponentTask extends DefaultTask {
         def rulesPathCopy = "${project.buildDir.absolutePath}/intermediates/proguard-rules/${applicationVariant.dirName}/aapt_rules_copy.txt"
         Map<String, Map<String, String>> replaceMap = Util.parseAaptRules(rulesPathCopy, map)
 
+        Util.log TAG, ""
         // AndroidManifest.xml
         if (replaceMap.containsKey("AndroidManifest.xml")) {
-            println "gradle version: " + project.getGradle().getGradleVersion()
+            Util.log TAG, "gradle version: " + project.getGradle().getGradleVersion()
             int gradleVersion = Integer.parseInt(project.getGradle().getGradleVersion().split("\\.")[0])
             String realPath = ""
             if (gradleVersion <= 3) {
@@ -73,24 +75,25 @@ class RewriteComponentTask extends DefaultTask {
                 String midPath = applicationVariant.dirName.equals("debug") ? "processDebugManifest" : "processReleaseManifest"
                 realPath = "${project.buildDir.absolutePath}/intermediates/merged_manifests/${applicationVariant.dirName}/${midPath}/merged/AndroidManifest.xml"
             }
-            println "rewrite ${realPath}"
+            Util.log TAG, "rewrite ${realPath}"
             replaceMap.get("AndroidManifest.xml").each { k, v ->
-                println "replace ${k} -> ${v}"
+                Util.log TAG, "replace ${k} -> ${v}"
                 writeLine(realPath, k, v)
             }
-            println ''
+            Util.log TAG, ''
         }
 
 
 //        replaceMap.each { k, v ->
-//            println "rewrite key = " + k
+//            Util.log TAG, "rewrite key = " + k
 //            ((Map) v).each { k2, v2 ->
-//                println "rewrite key2 = " + k2
-//                println "rewrite value2 = " + v2
+//                Util.log TAG, "rewrite key2 = " + k2
+//                Util.log TAG, "rewrite value2 = " + v2
 //            }
 //        }
 
 
+        Util.log TAG, ""
         long t0 = System.currentTimeMillis()
         File resDir = new File(getResPath())
         for (File dir : resDir.listFiles()) {
@@ -99,7 +102,7 @@ class RewriteComponentTask extends DefaultTask {
                 String resPath = getResPath()
                 BuildToolInfo buildToolInfo = applicationVariant.androidBuilder.getTargetInfo().getBuildTools()
                 String aapt2Path = buildToolInfo.getPath(BuildToolInfo.PathId.AAPT2)
-                println "####### aapt2Path path = " + aapt2Path + " ###########"
+                Util.log TAG, "####### aapt2Path path = " + aapt2Path + " ###########"
                 for (String path : xmlPath) {
                     String[] keyStrs = path.split("/")
                     int len = keyStrs.length
@@ -110,12 +113,12 @@ class RewriteComponentTask extends DefaultTask {
                             String orgTxt = file.getText(CHARSET)
                             String newTxt = orgTxt
                             Map<String, String> mp = replaceMap.get(key)
-                            println 'rewrite file: ' + file.absolutePath
+                            Util.log TAG, 'rewrite file: ' + file.absolutePath
                             mp.each { k, v ->
                                 newTxt = newTxt.replace(k+"\n", v+"\n")
                                 newTxt = newTxt.replace(k+" ", v+" ")
                                 newTxt = newTxt.replace(k+">", v+">")
-                                println "replace ${k} -> ${v}"
+                                Util.log TAG, "replace ${k} -> ${v}"
                             }
                             if (newTxt != orgTxt) {
                                 file.setText(newTxt, CHARSET)
@@ -124,12 +127,12 @@ class RewriteComponentTask extends DefaultTask {
                                 def proc = "${aapt2Path} compile -o ${resPath} ${path}".execute()
                                 proc.consumeProcessOutput(sout, serr)
                                 proc.waitForOrKill(1000)
-                                println "rewrite out> $sout err> $serr"
+                                Util.log TAG, "rewrite out> $sout err> $serr"
 
                                 // recover xml file
                                 file.setText(orgTxt, CHARSET)
                             }
-                            println ""
+                            Util.log TAG, ""
                         }
                     }
                 }
@@ -144,24 +147,24 @@ class RewriteComponentTask extends DefaultTask {
                         String orgTxt = file.getText(CHARSET)
                         String newTxt = orgTxt
                         Map<String, String> mp = replaceMap.get(key)
-                        println 'rewrite file: ' + file.absolutePath
+                        Util.log TAG, 'rewrite file: ' + file.absolutePath
                         mp.each { k, v ->
                             newTxt = newTxt.replace(k+"\n", v+"\n")
                             newTxt = newTxt.replace(k+" ", v+" ")
                             newTxt = newTxt.replace(k+">", v+">")
-                            println "replace ${k} -> ${v}"
+                            Util.log TAG, "replace ${k} -> ${v}"
                         }
                         if (newTxt != orgTxt) {
-//                            println 'rewrite file: ' + file.absolutePath
+//                            Util.log TAG, 'rewrite file: ' + file.absolutePath
                             file.setText(newTxt, CHARSET)
                         }
-                        println ""
+                        Util.log TAG, ""
                     }
                 }
             }
         }
 
-        println 'write layout and menu xml spend: ' + ((System.currentTimeMillis() - t0) / 1000) + ' s'
+        Util.log TAG, 'write layout and menu xml spend: ' + ((System.currentTimeMillis() - t0) / 1000) + ' s'
 
 
         ProcessAndroidResources processAndroidResourcesTask = variantOutput.processResources
@@ -175,9 +178,9 @@ class RewriteComponentTask extends DefaultTask {
         }
         processAndroidResourcesTask.execute()
 
-        println "execute process resources again"
+        Util.log TAG, "execute process resources again"
 
-        println "end rewrite task"
+        Util.log TAG, "end rewrite task"
     }
 
     void writeLine(String path, String oldStr, String newStr) {
