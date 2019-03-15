@@ -98,10 +98,13 @@ public class Util {
      * @param rulesPath
      * @return
      */
-  public static Map<String, Map<String, String>> parseAaptRules(String rulesPath, Map mappingMap) {
+  public static Map<String, Map<String, String>> parseAaptRules(String rulesPath, Map mappingMap, List<String> whiteList) {
       File aaptRules = new File(rulesPath)
       List<String> tmpXmlPath = new LinkedList<String>()
       Map<String, Map<String, String>> resultMap = new HashMap<String, Map<String, String>>()
+      boolean needLogWarning = (whiteList != null && whiteList.size() > 0);
+      log TAG, ""
+      log TAG, "start parseAaptRules"
       for (String line : aaptRules.readLines()) {
           if (line.startsWith("# view")) {
               line = line.replace("# view ", '')
@@ -150,10 +153,26 @@ public class Util {
                           }
                       }
                   }
+                  if (needLogWarning && value != null && !value.isEmpty() && className.equals(value)) {
+                      boolean isInWhiteList = false
+                      for (String str : whiteList) {
+                          if (str != null && str.length() > 0) {
+                              if (className.startsWith(str)) {
+                                  isInWhiteList = true
+                                  break
+                              }
+                          }
+                      }
+                      if (!isInWhiteList) {
+                          log TAG, "Waring: ${className} not be obfuscated"
+                      }
+                  }
                   tmpXmlPath.clear()
               }
           }
       }
+      log TAG, "end parseAaptRules"
+      log TAG, ""
       return resultMap
   }
     /**

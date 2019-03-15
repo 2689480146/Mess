@@ -59,9 +59,10 @@ class RewriteComponentTask extends DefaultTask {
         // the key2 will be mapped to, me.ele.aNew
         map = Util.sortMapping(map)
 
+        List<String> whiteList = Util.parseWhiteList("${project.rootDir}/messProguard/whiteList")
         // parse aapt_rules
         def rulesPathCopy = "${project.buildDir.absolutePath}/intermediates/proguard-rules/${applicationVariant.dirName}/aapt_rules_copy.txt"
-        Map<String, Map<String, String>> replaceMap = Util.parseAaptRules(rulesPathCopy, map)
+        Map<String, Map<String, String>> replaceMap = Util.parseAaptRules(rulesPathCopy, map, whiteList)
 
         Util.log TAG, ""
         // AndroidManifest.xml
