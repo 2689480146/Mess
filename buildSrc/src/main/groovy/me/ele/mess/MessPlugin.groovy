@@ -50,14 +50,12 @@ class MessPlugin implements Plugin<Project> {
 //                            Util.log TAG, "new file text = " + aaptRules.text
 
                             // adjust aaptRules
-                            List<String> whiteList = Util.parseWhiteList("${project.rootDir}/messProguard/whiteList")
-
                             for (String line : aaptRulesCopy.readLines()) {
 //                                Util.log TAG, "line: " + line
                                 if (line.startsWith("-keep")) {
                                     // -keep class ; len = 12
                                     String tmpLine = line.substring(12, line.length())
-                                    for (String white : whiteList) {
+                                    for (String white : ext.whiteList) {
                                         if (tmpLine.startsWith(white)) {
                                             Util.log TAG, "add keep class " + line
                                             aaptRules.append(line + "\n")
@@ -85,6 +83,7 @@ class MessPlugin implements Plugin<Project> {
                                     type: RewriteComponentTask
                             ) {
                                 applicationVariant = variant
+                                whiteList = ext.whiteList
                                 variantOutput = output
                             }
                             rewriteTask.execute()

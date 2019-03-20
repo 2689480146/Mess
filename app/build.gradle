@@ -53,5 +53,10 @@ dependencies {
 
 mess {
 //    ignoreProguard 'com.jakewharton:butterknife'
+    whiteList = [
+            "com.",
+            "me"
+    ]
     ignoreProguard 'com.android.support:recyclerview-v7'
+
 }
