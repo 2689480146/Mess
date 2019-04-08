@@ -75,8 +75,16 @@ class RewriteComponentTask extends DefaultTask {
             if (gradleVersion <= 3) {
                 realPath = "${project.buildDir.absolutePath}/intermediates/manifests/full/${getSubResPath()}/AndroidManifest.xml"
             } else {
-                String midPath = applicationVariant.dirName.equals("debug") ? "processDebugManifest" : "processReleaseManifest"
-                realPath = "${project.buildDir.absolutePath}/intermediates/merged_manifests/${applicationVariant.dirName}/${midPath}/merged/AndroidManifest.xml"
+                Util.log TAG, "flavorName: " + applicationVariant.flavorName
+                Util.log TAG, "assembleName: " + applicationVariant.assemble.name
+                Util.log TAG, "getDirName: " + applicationVariant.getDirName()
+
+                String adjustAssembleName = applicationVariant.assemble.name.substring(8) // assembleDebug
+                String midPath = "process${adjustAssembleName}Manifest"
+                char[] chars = adjustAssembleName.toCharArray()
+                chars[0] = Character.toLowerCase(chars[0])
+                adjustAssembleName = chars.toString()
+                realPath = "${project.buildDir.absolutePath}/intermediates/merged_manifests/${adjustAssembleName}/${midPath}/merged/AndroidManifest.xml"
             }
             Util.log TAG, "rewrite ${realPath}"
             replaceMap.get("AndroidManifest.xml").each { k, v ->
