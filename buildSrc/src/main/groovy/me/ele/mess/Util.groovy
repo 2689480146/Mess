@@ -5,6 +5,8 @@ import com.google.common.io.Files
 import groovy.io.FileType
 import org.gradle.api.Project
 
+import java.nio.file.Path
+
 public class Util {
 
   static final String TAG = "Util"
@@ -111,11 +113,13 @@ public class Util {
               if (line.split(' ')[0].equals("AndroidManifest.xml")) {
                   tmpXmlPath.add("AndroidManifest.xml")
               } else {
-                  String[] pathStr = line.split(' ')[0].split('/')
+                  String[] pathStr = line.split(' ')[0].split(File.separator)
                   int len = pathStr.length
                   if (len >= 2) {
-                      String keyPath = pathStr[len - 2] + "/" + pathStr[len - 1]
-                      tmpXmlPath.add(keyPath)
+                      String keyPath = pathStr[len - 2].split("-")[0] + File.separator + pathStr[len - 1]
+                      if (!tmpXmlPath.contains(keyPath)) {
+                          tmpXmlPath.add(keyPath)
+                      }
                   }
               }
           } else if (line.startsWith("# Referenced ")) { // aapt2
@@ -123,11 +127,13 @@ public class Util {
               if (line.contains("AndroidManifest.xml")) {
                   tmpXmlPath.add("AndroidManifest.xml")
               } else {
-                  String[] pathStr = line.split(":")[0].split('/')
+                  String[] pathStr = line.split(":")[0].split(File.separator)
                   int len = pathStr.length
                   if (len >= 2) {
-                      String keyPath = pathStr[len - 2] + "/" + pathStr[len - 1]
-                      tmpXmlPath.add(keyPath)
+                      String keyPath = pathStr[len - 2].split("-")[0] + File.separator + pathStr[len - 1]
+                      if (!tmpXmlPath.contains(keyPath)) {
+                          tmpXmlPath.add(keyPath)
+                      }
                   }
               }
           } else if (line.startsWith("-keep class ")) {
@@ -193,7 +199,34 @@ public class Util {
                 }
             }
         }
-        return tmpXmlPath
+        List<String> resultPath = new LinkedList<>()
+        resultPath.addAll(tmpXmlPath)
+        // check v21 an so on
+        for (String str : tmpXmlPath) {
+            File file  = new File(str)
+            if (file.exists()
+                    && file.getParentFile().exists()
+                    && !file.getParentFile().name.contains("-")
+                    && file.getParentFile().getParentFile().exists()) {
+                File pp = file.getParentFile().getParentFile()
+                FilenameFilter filenameFilter = new FilenameFilter() {
+                    @Override
+                    boolean accept(File filterFile, String name) {
+                        return name.contains("-")
+                    }
+                }
+                List<String> list = pp.list(filenameFilter)
+                for (String lp : list) {
+                    File tt = new File(pp.getPath() + File.separator + lp + File.separator + file.name)
+                    if (tt.exists() && !resultPath.contains(tt.path)) {
+                        resultPath.add(tt.path)
+                        log TAG, "add versionRes: " + tt.path
+                    }
+                }
+            }
+        }
+        log TAG, ""
+        return resultPath
     }
 
     public static List<String> parseWhiteList(String whiteListPath) {

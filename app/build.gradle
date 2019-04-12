@@ -2,7 +2,7 @@ apply plugin: 'com.android.application'
 apply plugin: 'me.ele.mess'
 
 mess {
-//    ignoreProguard 'com.jakewharton:butterknife'
+    ignoreProguard 'com.jakewharton:butterknife'
     whiteList = [
             "your.while.list",
             "android"

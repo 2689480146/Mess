@@ -115,15 +115,29 @@ class RewriteComponentTask extends DefaultTask {
                 String aapt2Path = buildToolInfo.getPath(BuildToolInfo.PathId.AAPT2)
                 Util.log TAG, "####### aapt2Path path = " + aapt2Path + " ###########"
                 for (String path : xmlPath) {
-                    String[] keyStrs = path.split("/")
+                    String[] keyStrs = path.split(File.separator)
                     int len = keyStrs.length
                     if (len >= 2) {
-                        String key = keyStrs[len - 2] + "/" + keyStrs[len - 1]
+                        String key = keyStrs[len - 2] + File.separator + keyStrs[len - 1]
+                        List<String> keys = new ArrayList<String>()
                         if (replaceMap.containsKey(key)) {
+                            keys.add(key)
+                        }
+                        if (keyStrs[len - 2].contains("-")) {
+                            key = keyStrs[len - 2].split("-")[0] + File.separator + keyStrs[len - 1]
+                            if (replaceMap.containsKey(key)) {
+                                keys.add(key)
+                            }
+                        }
+
+                        if (keys.size() != 0) {
                             File file = new File(path)
                             String orgTxt = file.getText(CHARSET)
                             String newTxt = orgTxt
-                            Map<String, String> mp = replaceMap.get(key)
+                            Map<String, String> mp = new HashMap<>()
+                            for (String kk: keys) {
+                                mp.putAll(replaceMap.get(kk))
+                            }
                             Util.log TAG, 'rewrite file: ' + file.absolutePath
                             mp.each { k, v ->
                                 boolean hasContains = newTxt.contains(k+"\n") || newTxt.contains(k+"\r") || newTxt.contains(k+"\r\n") || newTxt.contains(k+" ") || newTxt.contains(k+">")
@@ -157,9 +171,9 @@ class RewriteComponentTask extends DefaultTask {
             }
             if (dir.exists() && dir.isDirectory() && isLayoutsDir(dir.name)) {
                 dir.eachFileRecurse(FileType.FILES) { File file ->
-                    String[] paths = file.absolutePath.split('/')
+                    String[] paths = file.absolutePath.split(File.separator)
                     int len = paths.length
-                    String key = paths[len - 2] + "/" + paths[len - 1]
+                    String key = paths[len - 2] + File.separator + paths[len - 1]
                     if (replaceMap.containsKey(key)) {
                         String orgTxt = file.getText(CHARSET)
                         String newTxt = orgTxt
@@ -198,6 +212,42 @@ class RewriteComponentTask extends DefaultTask {
         Util.log TAG, "execute process resources again"
 
         Util.log TAG, "end rewrite task"
+    }
+
+    void replaceContent(String path, List<String> keys, Map<String, Map<String, String>> replaceMap, String aapt2Path) {
+        File file = new File(path)
+        String orgTxt = file.getText(CHARSET)
+        String newTxt = orgTxt
+        Map<String, String> mp = new HashMap<String, String>()
+        for (String key: keys) {
+            mp.putAll(replaceMap.get(key))
+        }
+        Util.log TAG, 'rewrite file: ' + file.absolutePath
+        mp.each { k, v ->
+            boolean hasContains = newTxt.contains(k+"\n") || newTxt.contains(k+"\r") || newTxt.contains(k+"\r\n") || newTxt.contains(k+" ") || newTxt.contains(k+">")
+            newTxt = newTxt.replace(k+"\n", v+"\n")
+            newTxt = newTxt.replace(k+"\r", v+"\r")
+            newTxt = newTxt.replace(k+"\r\n", v+"\r\n")
+            newTxt = newTxt.replace(k+" ", v+" ")
+            newTxt = newTxt.replace(k+">", v+">")
+            Util.log TAG, "replace ${k} -> ${v}, sucessed: ${hasContains}"
+            if (!hasContains) {
+                Util.log TAG, "Error: replace ${k} -> ${v} failed."
+            }
+        }
+        if (newTxt != orgTxt) {
+            file.setText(newTxt, CHARSET)
+            // aapt compile
+            def sout = new StringBuilder(), serr = new StringBuilder()
+            def proc = "${aapt2Path} compile -o ${resPath} ${path}".execute()
+            proc.consumeProcessOutput(sout, serr)
+            proc.waitForOrKill(1000)
+            Util.log TAG, "rewrite out> $sout err> $serr"
+
+            // recover xml file
+            file.setText(orgTxt, CHARSET)
+        }
+        Util.log TAG, ""
     }
 
     void writeLine(String path, String oldStr, String newStr) {
