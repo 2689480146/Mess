@@ -1,5 +1,6 @@
 buildscript {
   repositories {
+    google()
     jcenter()
   }
   dependencies {
@@ -9,6 +10,7 @@ buildscript {
 
 allprojects {
   repositories {
+    google()
     jcenter()
   }
   apply plugin: 'maven'
@@ -68,10 +70,10 @@ publishing {
 }
 
 dependencies {
-  compile fileTree(include: ['*.jar'], dir: 'libs')
-  compile gradleApi()
-  compile localGroovy()
-  compile 'com.android.tools.build:gradle:2.3.3'
+  implementation fileTree(include: ['*.jar'], dir: 'libs')
+  implementation gradleApi()
+  implementation localGroovy()
+  implementation 'com.android.tools.build:gradle:3.2.1'
 }
 
 
@@ -90,7 +92,7 @@ try {
       licenses = ['Apache-2.0']
       vcsUrl = 'https://github.com/bintray/gradle-bintray-plugin.git'
       version {
-        name = '1.1.5'
+        name = '1.1.6'
         attributes = ['gradle-plugin': 'Mess:me.ele:mess-plugin']
       }
     }
