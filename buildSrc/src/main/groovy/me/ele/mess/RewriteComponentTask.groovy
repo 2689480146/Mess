@@ -115,7 +115,7 @@ class RewriteComponentTask extends DefaultTask {
                 String aapt2Path = buildToolInfo.getPath(BuildToolInfo.PathId.AAPT2)
                 Util.log TAG, "####### aapt2Path path = " + aapt2Path + " ###########"
                 for (String path : xmlPath) {
-                    String[] keyStrs = path.split(File.separator)
+                    String[] keyStrs = path.split(Util.FILE_SPLIT_STR)
                     int len = keyStrs.length
                     if (len >= 2) {
                         String key = keyStrs[len - 2] + File.separator + keyStrs[len - 1]

@@ -12,7 +12,8 @@ public class Util {
   static final String TAG = "Util"
   static final String LOG_FINE_NAME = "messProguard.txt"
   static String LOG_PATH = "./" + LOG_FINE_NAME
-  static String FILE_SPLIT_STR = File.separator.equals("\\") ? "\\" : File.separator;
+  static String FILE_SPLIT_STR = File.separator.equals("/") ? File.separator : "\\\\"
+  static int PATH_INDEX = File.separator.equals("/") ? 0 : 1
   public static MavenCoordinates parseMavenString(String component) {
     String[] arrays = component.split(":")
     return new MavenCoordinates() {
@@ -128,7 +129,7 @@ public class Util {
               if (line.contains("AndroidManifest.xml")) {
                   tmpXmlPath.add("AndroidManifest.xml")
               } else {
-                  String[] pathStr = line.split(":")[0].split(FILE_SPLIT_STR)
+                  String[] pathStr = line.split(":")[PATH_INDEX].split(FILE_SPLIT_STR)
                   int len = pathStr.length
                   if (len >= 2) {
                       String keyPath = pathStr[len - 2].split("-")[0] + File.separator + pathStr[len - 1]
@@ -194,7 +195,7 @@ public class Util {
         for (String line : aaptRules.readLines()) {
             if (line.startsWith("# Referenced ") && !line.contains("AndroidManifest.xml")) {
                 // aapt2
-                String pathStr = line.replace("# Referenced at ", "").split(":")[0]
+                String pathStr = line.replace("# Referenced at ", "").split(":")[PATH_INDEX]
                 if (pathStr != null && !pathStr.equals("") && !tmpXmlPath.contains(pathStr)) {
                     tmpXmlPath.add(pathStr)
                 }
