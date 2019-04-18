@@ -171,7 +171,7 @@ class RewriteComponentTask extends DefaultTask {
             }
             if (dir.exists() && dir.isDirectory() && isLayoutsDir(dir.name)) {
                 dir.eachFileRecurse(FileType.FILES) { File file ->
-                    String[] paths = file.absolutePath.split(File.separator)
+                    String[] paths = file.absolutePath.split(Util.FILE_SPLIT_STR)
                     int len = paths.length
                     String key = paths[len - 2] + File.separator + paths[len - 1]
                     if (replaceMap.containsKey(key)) {
