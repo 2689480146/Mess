@@ -173,23 +173,45 @@ class RewriteComponentTask extends DefaultTask {
                 dir.eachFileRecurse(FileType.FILES) { File file ->
                     String[] paths = file.absolutePath.split(Util.FILE_SPLIT_STR)
                     int len = paths.length
-                    String key = paths[len - 2] + File.separator + paths[len - 1]
-                    if (replaceMap.containsKey(key)) {
-                        String orgTxt = file.getText(CHARSET)
-                        String newTxt = orgTxt
-                        Map<String, String> mp = replaceMap.get(key)
-                        Util.log TAG, 'rewrite file: ' + file.absolutePath
-                        mp.each { k, v ->
-                            newTxt = newTxt.replace(k+"\n", v+"\n")
-                            newTxt = newTxt.replace(k+" ", v+" ")
-                            newTxt = newTxt.replace(k+">", v+">")
-                            Util.log TAG, "replace ${k} -> ${v}"
+                    if (len >= 2) {
+                        List<String> keys = new ArrayList<String>()
+                        String key = paths[len - 2] + File.separator + paths[len - 1]
+                        if (replaceMap.containsKey(key)) {
+                            keys.add(key)
                         }
-                        if (newTxt != orgTxt) {
+                        if (paths[len - 2].contains("-")) {
+                            key = paths[len - 2].split("-")[0] + File.separator + paths[len - 1]
+                            if (replaceMap.containsKey(key)) {
+                                keys.add(key)
+                            }
+                        }
+
+                        if (keys.size() != 0) {
+                            String orgTxt = file.getText(CHARSET)
+                            String newTxt = orgTxt
+                            Map<String, String> mp = new HashMap<>()
+                            for (String kk: keys) {
+                                mp.putAll(replaceMap.get(kk))
+                            }
+                            Util.log TAG, 'rewrite file: ' + file.absolutePath
+                            mp.each { k, v ->
+                                boolean hasContains = newTxt.contains(k+"\n") || newTxt.contains(k+"\r") || newTxt.contains(k+"\r\n") || newTxt.contains(k+" ") || newTxt.contains(k+">")
+                                newTxt = newTxt.replace(k+"\n", v+"\n")
+                                newTxt = newTxt.replace(k+"\r", v+"\r")
+                                newTxt = newTxt.replace(k+"\r\n", v+"\r\n")
+                                newTxt = newTxt.replace(k+" ", v+" ")
+                                newTxt = newTxt.replace(k+">", v+">")
+                                Util.log TAG, "replace ${k} -> ${v}, sucessed: ${hasContains}"
+                                if (!hasContains) {
+                                    Util.log TAG, "Error: replace ${k} -> ${v} failed."
+                                }
+                            }
+                            if (newTxt != orgTxt) {
 //                            Util.log TAG, 'rewrite file: ' + file.absolutePath
-                            file.setText(newTxt, CHARSET)
+                                file.setText(newTxt, CHARSET)
+                            }
+                            Util.log TAG, ""
                         }
-                        Util.log TAG, ""
                     }
                 }
             }
