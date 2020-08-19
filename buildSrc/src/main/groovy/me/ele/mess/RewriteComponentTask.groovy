@@ -140,12 +140,13 @@ class RewriteComponentTask extends DefaultTask {
                             }
                             Util.log TAG, 'rewrite file: ' + file.absolutePath
                             mp.each { k, v ->
-                                boolean hasContains = newTxt.contains(k+"\n") || newTxt.contains(k+"\r") || newTxt.contains(k+"\r\n") || newTxt.contains(k+" ") || newTxt.contains(k+">")
-                                newTxt = newTxt.replace(k+"\n", v+"\n")
-                                newTxt = newTxt.replace(k+"\r", v+"\r")
-                                newTxt = newTxt.replace(k+"\r\n", v+"\r\n")
-                                newTxt = newTxt.replace(k+" ", v+" ")
-                                newTxt = newTxt.replace(k+">", v+">")
+                                boolean hasContains = newTxt.contains(k + "\n") || newTxt.contains(k + "\r") || newTxt.contains(k + "\r\n") || newTxt.contains(k + " ") || newTxt.contains(k + ">") || newTxt.contains("class=\"" + k)
+                                newTxt = newTxt.replace(k + "\n", v + "\n")
+                                newTxt = newTxt.replace(k + "\r", v + "\r")
+                                newTxt = newTxt.replace(k + "\r\n", v + "\r\n")
+                                newTxt = newTxt.replace(k + " ", v + " ")
+                                newTxt = newTxt.replace(k + ">", v + ">")
+                                newTxt = newTxt.replace("class=\"" + k, "class=\"" + v)
                                 Util.log TAG, "replace ${k} -> ${v}, sucessed: ${hasContains}"
                                 if (!hasContains) {
                                     Util.log TAG, "Error: replace ${k} -> ${v} failed."
@@ -195,12 +196,13 @@ class RewriteComponentTask extends DefaultTask {
                             }
                             Util.log TAG, 'rewrite file: ' + file.absolutePath
                             mp.each { k, v ->
-                                boolean hasContains = newTxt.contains(k+"\n") || newTxt.contains(k+"\r") || newTxt.contains(k+"\r\n") || newTxt.contains(k+" ") || newTxt.contains(k+">")
-                                newTxt = newTxt.replace(k+"\n", v+"\n")
-                                newTxt = newTxt.replace(k+"\r", v+"\r")
-                                newTxt = newTxt.replace(k+"\r\n", v+"\r\n")
-                                newTxt = newTxt.replace(k+" ", v+" ")
-                                newTxt = newTxt.replace(k+">", v+">")
+                                boolean hasContains = newTxt.contains(k + "\n") || newTxt.contains(k + "\r") || newTxt.contains(k + "\r\n") || newTxt.contains(k + " ") || newTxt.contains(k + ">") || newTxt.contains("class=\"" + k)
+                                newTxt = newTxt.replace(k + "\n", v + "\n")
+                                newTxt = newTxt.replace(k + "\r", v + "\r")
+                                newTxt = newTxt.replace(k + "\r\n", v + "\r\n")
+                                newTxt = newTxt.replace(k + " ", v + " ")
+                                newTxt = newTxt.replace(k + ">", v + ">")
+                                newTxt = newTxt.replace("class=\"" + k, "class=\"" + v)
                                 Util.log TAG, "replace ${k} -> ${v}, sucessed: ${hasContains}"
                                 if (!hasContains) {
                                     Util.log TAG, "Error: replace ${k} -> ${v} failed."
@@ -246,12 +248,13 @@ class RewriteComponentTask extends DefaultTask {
         }
         Util.log TAG, 'rewrite file: ' + file.absolutePath
         mp.each { k, v ->
-            boolean hasContains = newTxt.contains(k+"\n") || newTxt.contains(k+"\r") || newTxt.contains(k+"\r\n") || newTxt.contains(k+" ") || newTxt.contains(k+">")
-            newTxt = newTxt.replace(k+"\n", v+"\n")
-            newTxt = newTxt.replace(k+"\r", v+"\r")
-            newTxt = newTxt.replace(k+"\r\n", v+"\r\n")
-            newTxt = newTxt.replace(k+" ", v+" ")
-            newTxt = newTxt.replace(k+">", v+">")
+            boolean hasContains = newTxt.contains(k + "\n") || newTxt.contains(k + "\r") || newTxt.contains(k + "\r\n") || newTxt.contains(k + " ") || newTxt.contains(k + ">") || newTxt.contains("class=\"" + k)
+            newTxt = newTxt.replace(k + "\n", v + "\n")
+            newTxt = newTxt.replace(k + "\r", v + "\r")
+            newTxt = newTxt.replace(k + "\r\n", v + "\r\n")
+            newTxt = newTxt.replace(k + " ", v + " ")
+            newTxt = newTxt.replace(k + ">", v + ">")
+            newTxt = newTxt.replace("class=\"" + k, "class=\"" + v)
             Util.log TAG, "replace ${k} -> ${v}, sucessed: ${hasContains}"
             if (!hasContains) {
                 Util.log TAG, "Error: replace ${k} -> ${v} failed."
